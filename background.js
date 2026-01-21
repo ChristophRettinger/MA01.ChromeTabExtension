@@ -53,24 +53,22 @@ const setTabIcon = async (tabId, url) => {
   await chrome.scripting.executeScript({
     target: { tabId },
     func: (iconUrl) => {
-      const existing =
-        document.querySelector("link[rel~='icon']") ??
-        document.querySelector("link[rel='shortcut icon']");
+      const existingIcons = Array.from(
+        document.querySelectorAll(
+          "link[rel~='icon'], link[rel='shortcut icon']",
+        ),
+      );
+
+      existingIcons.forEach((icon) => icon.remove());
 
       if (!iconUrl) {
-        if (existing) {
-          existing.remove();
-        }
         return;
       }
 
-      const iconLink = existing ?? document.createElement('link');
+      const iconLink = document.createElement('link');
       iconLink.rel = 'icon';
       iconLink.href = iconUrl;
-
-      if (!existing) {
-        document.head.appendChild(iconLink);
-      }
+      document.head.appendChild(iconLink);
     },
     args: [url],
   });
