@@ -53,13 +53,17 @@ const setTabIcon = async (tabId, url) => {
   await chrome.scripting.executeScript({
     target: { tabId },
     func: (iconUrl) => {
-      if (!iconUrl) {
-        return;
-      }
-
       const existing =
         document.querySelector("link[rel~='icon']") ??
         document.querySelector("link[rel='shortcut icon']");
+
+      if (!iconUrl) {
+        if (existing) {
+          existing.remove();
+        }
+        return;
+      }
+
       const iconLink = existing ?? document.createElement('link');
       iconLink.rel = 'icon';
       iconLink.href = iconUrl;
@@ -72,6 +76,49 @@ const setTabIcon = async (tabId, url) => {
   });
 };
 
+const getAvailableIcons = () =>
+  new Promise((resolve) => {
+    chrome.runtime.getPackageDirectoryEntry(
+      (root) => {
+        root.getDirectory(
+          'icons',
+          {},
+          (iconsDirectory) => {
+            const reader = iconsDirectory.createReader();
+            const entries = [];
+
+            const readEntries = () => {
+              reader.readEntries((results) => {
+                if (!results.length) {
+                  const icons = entries
+                    .filter(
+                      (entry) =>
+                        entry.isFile &&
+                        /\.(png|svg|ico)$/i.test(entry.name),
+                    )
+                    .map((entry) => ({
+                      name: entry.name,
+                      url: chrome.runtime.getURL(`icons/${entry.name}`),
+                    }))
+                    .sort((a, b) => a.name.localeCompare(b.name));
+                  resolve(icons);
+                  return;
+                }
+
+                entries.push(...results);
+                readEntries();
+              });
+            };
+
+            readEntries();
+          },
+          () => resolve([]),
+        );
+      },
+      () => resolve([]),
+    );
+  });
+
 const promptForTabName = async (tabId, currentName) => {
   const [result] = await chrome.scripting.executeScript({
     target: { tabId },
@@ -83,14 +130,41 @@ const promptForTabName = async (tabId, currentName) => {
 };
 
 const promptForTabIcon = async (tabId, currentUrl) => {
+  const icons = await getAvailableIcons();
+  const options = icons.length
+    ? icons.map((icon, index) => `${index + 1}. ${icon.name}`).join('\n')
+    : 'No icons available.';
+  const currentIndex = currentUrl
+    ? icons.findIndex((icon) => icon.url === currentUrl) + 1
+    : 0;
   const [result] = await chrome.scripting.executeScript({
     target: { tabId },
-    func: (defaultUrl) =>
-      prompt('Icon URL (optional):', defaultUrl ?? ''),
-    args: [currentUrl],
+    func: (message, defaultValue) => prompt(message, defaultValue),
+    args: [
+      `Select an icon number or leave blank for none:\n${options}`,
+      currentIndex ? String(currentIndex) : '',
+    ],
   });
 
-  return result?.result ?? null;
+  if (result?.result === null || result?.result === undefined) {
+    return null;
+  }
+
+  const selection = result.result.trim();
+  if (!selection) {
+    return '';
+  }
+
+  const selectionIndex = Number.parseInt(selection, 10);
+  if (
+    !Number.isFinite(selectionIndex) ||
+    selectionIndex < 1 ||
+    selectionIndex > icons.length
+  ) {
+    return '';
+  }
+
+  return icons[selectionIndex - 1].url;
 };
 
 const ensureContextMenu = () => {
@@ -126,9 +200,9 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 
   await setStoredTabName(tab.id, newName);
-  await setStoredTabIcon(tab.id, newIconUrl.trim() || null);
+  await setStoredTabIcon(tab.id, newIconUrl || null);
   await setTabTitle(tab.id, newName);
-  await setTabIcon(tab.id, newIconUrl.trim());
+  await setTabIcon(tab.id, newIconUrl);
 });
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
