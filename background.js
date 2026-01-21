@@ -46,7 +46,7 @@ const ensureContextMenu = () => {
     chrome.contextMenus.create({
       id: MENU_ID,
       title: 'Name tab',
-      contexts: ['tab'],
+      contexts: ['page'],
     });
   });
 };
