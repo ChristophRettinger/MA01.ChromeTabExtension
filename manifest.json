@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "TabMagic",
+  "version": "0.1.0",
+  "description": "Personal extension to change tab names.",
+  "action": {
+    "default_title": "TabMagic"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
