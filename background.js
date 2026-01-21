@@ -76,48 +76,19 @@ const setTabIcon = async (tabId, url) => {
   });
 };
 
+const AVAILABLE_ICONS = [
+  'dial-svgrepo-com.svg',
+  'menu-svgrepo-com.svg',
+  'pen-svgrepo-com.svg',
+  'placeholder.svg',
+  'subscription-svgrepo-com.svg',
+];
+
 const getAvailableIcons = () =>
-  new Promise((resolve) => {
-    chrome.runtime.getPackageDirectoryEntry(
-      (root) => {
-        root.getDirectory(
-          'icons',
-          {},
-          (iconsDirectory) => {
-            const reader = iconsDirectory.createReader();
-            const entries = [];
-
-            const readEntries = () => {
-              reader.readEntries((results) => {
-                if (!results.length) {
-                  const icons = entries
-                    .filter(
-                      (entry) =>
-                        entry.isFile &&
-                        /\.(png|svg|ico)$/i.test(entry.name),
-                    )
-                    .map((entry) => ({
-                      name: entry.name,
-                      url: chrome.runtime.getURL(`icons/${entry.name}`),
-                    }))
-                    .sort((a, b) => a.name.localeCompare(b.name));
-                  resolve(icons);
-                  return;
-                }
-
-                entries.push(...results);
-                readEntries();
-              });
-            };
-
-            readEntries();
-          },
-          () => resolve([]),
-        );
-      },
-      () => resolve([]),
-    );
-  });
+  AVAILABLE_ICONS.map((name) => ({
+    name,
+    url: chrome.runtime.getURL(`icons/${name}`),
+  }));
 
 const promptForTabName = async (tabId, currentName) => {
   const [result] = await chrome.scripting.executeScript({
