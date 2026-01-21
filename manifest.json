@@ -4,11 +4,17 @@
   "version": "0.1.0",
   "description": "Personal extension to change tab names.",
   "action": {
-    "default_title": "TabMagic"
+    "default_title": "TabMagic",
+    "default_icon": {
+      "128": "icons/placeholder.svg"
+    }
   },
   "background": {
     "service_worker": "background.js"
   },
   "permissions": ["contextMenus", "scripting", "tabs", "storage"],
-  "host_permissions": ["<all_urls>"]
+  "host_permissions": ["<all_urls>"],
+  "icons": {
+    "128": "icons/placeholder.svg"
+  }
 }

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="24" fill="#5b8def"/>
+  <rect x="20" y="28" width="88" height="72" rx="10" fill="#ffffff" opacity="0.18"/>
+  <path d="M36 44h56v8H36zm0 18h56v8H36zm0 18h32v8H36z" fill="#ffffff"/>
+  <text x="64" y="112" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#ffffff">TAB</text>
+</svg>
