@@ -16,7 +16,7 @@
   "host_permissions": ["<all_urls>"],
   "web_accessible_resources": [
     {
-      "resources": ["icons/*.ico"],
+      "resources": ["icons/*.ico", "icons/*.png"],
       "matches": ["<all_urls>"]
     }
   ],
