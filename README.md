@@ -14,3 +14,8 @@ TabMagic is a personal Chrome extension intended for developer mode installs. Th
 
 - This is a boilerplate placeholder. No functionality is implemented yet.
 - Future updates can add automatic or manual tab renaming features.
+
+## Icon Assets
+
+- PNG: `icons/Red_01.png`
+- ICO: `icons/Red_02.ico`, `icons/dial-svgrepo-com.ico`, `icons/menu-svgrepo-com.ico`, `icons/pen-svgrepo-com.ico`, `icons/placeholder.ico`, `icons/subscription-svgrepo-com.ico`
