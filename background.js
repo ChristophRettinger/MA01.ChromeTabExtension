@@ -17,6 +17,13 @@ const getTabIconKey = (url) => `${TAB_ICON_PREFIX}${encodeURIComponent(url)}`;
 const getTabUrl = (tab, changeInfo = {}) =>
   changeInfo.url ?? tab?.url ?? tab?.pendingUrl ?? '';
 
+const isRestrictedTabUrl = (url = '') =>
+  url.startsWith('chrome://') ||
+  url.startsWith('chrome-extension://') ||
+  url.startsWith('devtools://') ||
+  url.startsWith('edge://') ||
+  url.startsWith('about:');
+
 const getStoredTabName = async (url) => {
   const key = getTabKey(url);
   const result = await storage.get(key);
@@ -112,6 +119,7 @@ const AVAILABLE_ICONS = [
   'DarkTeal_2.png',
   'DarkTeal_3.png',
   'DarkTeal_4.png',
+  'ErrorEmails.png',
   'Peach_1.png',
   'Peach_2.png',
   'Peach_3.png',
@@ -190,11 +198,21 @@ const parseRules = (rulesText) =>
     })
     .filter(Boolean);
 
+const getRegexMatch = (regex, url) => {
+  const flags = regex.flags.replace('g', '');
+  const matcher = new RegExp(regex.source, flags);
+  return matcher.exec(url);
+};
+
+const applyTemplate = (template, match) =>
+  template.replace(/\$(\d+)/g, (_, index) => match?.[Number(index)] ?? '');
+
 const getRuleMatch = (url, rulesText) => {
   const rules = parseRules(rulesText);
   for (const rule of rules) {
-    if (rule.regex.test(url)) {
-      return rule;
+    const match = getRegexMatch(rule.regex, url);
+    if (match) {
+      return { ...rule, match };
     }
   }
   return null;
@@ -216,6 +234,9 @@ const refreshTabAppearance = async (tabId, tab, tabUrl) => {
   if (!url) {
     return;
   }
+  if (isRestrictedTabUrl(url)) {
+    return;
+  }
 
   const [storedName, storedIcon, storedRules] = await Promise.all([
     getStoredTabName(url),
@@ -231,7 +252,7 @@ const refreshTabAppearance = async (tabId, tab, tabUrl) => {
   if (storedName && storedName !== tab?.title) {
     await setTabTitle(tabId, storedName);
   } else if (needsRuleName && ruleMatch?.nameTemplate) {
-    const nextTitle = url.replace(ruleMatch.regex, ruleMatch.nameTemplate);
+    const nextTitle = applyTemplate(ruleMatch.nameTemplate, ruleMatch.match);
     if (nextTitle && nextTitle !== tab?.title) {
       await setTabTitle(tabId, nextTitle);
     }
@@ -240,7 +261,10 @@ const refreshTabAppearance = async (tabId, tab, tabUrl) => {
   if (storedIcon !== null && storedIcon !== undefined) {
     await setTabIcon(tabId, storedIcon);
   } else if (needsRuleIcon && ruleMatch?.hasIcon) {
-    const iconName = url.replace(ruleMatch.regex, ruleMatch.iconTemplate ?? '');
+    const iconName = applyTemplate(
+      ruleMatch.iconTemplate ?? '',
+      ruleMatch.match,
+    );
     await setTabIcon(tabId, getIconUrlByName(iconName));
   }
 };
@@ -683,6 +707,9 @@ const handleConfigureTab = async (tab) => {
   if (!tabUrl) {
     return;
   }
+  if (isRestrictedTabUrl(tabUrl)) {
+    return;
+  }
 
   tabUrlById.set(tab.id, tabUrl);
   const storedName = await getStoredTabName(tabUrl);
@@ -707,6 +734,10 @@ const handleConfigureTab = async (tab) => {
 
 const handleGeneralSettings = async (tab) => {
   if (!tab?.id) {
+    return;
+  }
+  const tabUrl = getTabUrl(tab);
+  if (isRestrictedTabUrl(tabUrl)) {
     return;
   }
 
