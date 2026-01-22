@@ -115,6 +115,7 @@ const AVAILABLE_ICONS = [
   'Coral_2.png',
   'Coral_3.png',
   'Coral_4.png',
+  'Coral_B.png',
   'DarkTeal_1.png',
   'DarkTeal_2.png',
   'DarkTeal_3.png',
