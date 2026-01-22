@@ -84,6 +84,8 @@ const AVAILABLE_ICONS = [
   'menu-svgrepo-com.ico',
   'pen-svgrepo-com.ico',
   'placeholder.ico',
+  'Red_01.png',
+  'Red_02.ico',
   'subscription-svgrepo-com.ico',
 ];
 
