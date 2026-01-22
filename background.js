@@ -3,39 +3,43 @@ const MENU_ACTION_ID = 'tabmagic-name-tab-toolbar';
 const TAB_NAME_PREFIX = 'tabName:';
 const TAB_ICON_PREFIX = 'tabIcon:';
 
-const storage = chrome.storage.session;
+const storage = chrome.storage.local;
+const tabUrlById = new Map();
 
-const getTabKey = (tabId) => `${TAB_NAME_PREFIX}${tabId}`;
-const getTabIconKey = (tabId) => `${TAB_ICON_PREFIX}${tabId}`;
+const getTabKey = (url) => `${TAB_NAME_PREFIX}${encodeURIComponent(url)}`;
+const getTabIconKey = (url) => `${TAB_ICON_PREFIX}${encodeURIComponent(url)}`;
 
-const getStoredTabName = async (tabId) => {
-  const key = getTabKey(tabId);
+const getTabUrl = (tab, changeInfo = {}) =>
+  changeInfo.url ?? tab?.url ?? tab?.pendingUrl ?? '';
+
+const getStoredTabName = async (url) => {
+  const key = getTabKey(url);
   const result = await storage.get(key);
   return result[key] ?? null;
 };
 
-const setStoredTabName = async (tabId, name) => {
-  const key = getTabKey(tabId);
+const setStoredTabName = async (url, name) => {
+  const key = getTabKey(url);
   await storage.set({ [key]: name });
 };
 
-const setStoredTabIcon = async (tabId, url) => {
-  const key = getTabIconKey(tabId);
-  await storage.set({ [key]: url });
+const setStoredTabIcon = async (url, iconUrl) => {
+  const key = getTabIconKey(url);
+  await storage.set({ [key]: iconUrl });
 };
 
-const clearStoredTabName = async (tabId) => {
-  const key = getTabKey(tabId);
+const clearStoredTabName = async (url) => {
+  const key = getTabKey(url);
   await storage.remove(key);
 };
 
-const clearStoredTabIcon = async (tabId) => {
-  const key = getTabIconKey(tabId);
+const clearStoredTabIcon = async (url) => {
+  const key = getTabIconKey(url);
   await storage.remove(key);
 };
 
-const getStoredTabIcon = async (tabId) => {
-  const key = getTabIconKey(tabId);
+const getStoredTabIcon = async (url) => {
+  const key = getTabIconKey(url);
   const result = await storage.get(key);
   return result[key] ?? null;
 };
@@ -316,8 +320,14 @@ const handleConfigureTab = async (tab) => {
     return;
   }
 
-  const storedName = await getStoredTabName(tab.id);
-  const storedIcon = await getStoredTabIcon(tab.id);
+  const tabUrl = getTabUrl(tab);
+  if (!tabUrl) {
+    return;
+  }
+
+  tabUrlById.set(tab.id, tabUrl);
+  const storedName = await getStoredTabName(tabUrl);
+  const storedIcon = await getStoredTabIcon(tabUrl);
   const currentName = storedName ?? tab.title ?? '';
   const result = await openTabConfigDialog(
     tab.id,
@@ -330,8 +340,8 @@ const handleConfigureTab = async (tab) => {
   }
 
   const normalizedIconUrl = result.iconUrl ?? '';
-  await setStoredTabName(tab.id, result.name);
-  await setStoredTabIcon(tab.id, normalizedIconUrl);
+  await setStoredTabName(tabUrl, result.name);
+  await setStoredTabIcon(tabUrl, normalizedIconUrl);
   await setTabTitle(tab.id, result.name);
   await setTabIcon(tab.id, normalizedIconUrl);
 };
@@ -352,13 +362,22 @@ chrome.action.onClicked.addListener(async (tab) => {
 });
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  const tabUrl = getTabUrl(tab, changeInfo);
+  if (!tabUrl) {
+    return;
+  }
+
+  if (tabUrl) {
+    tabUrlById.set(tabId, tabUrl);
+  }
+
   if (!changeInfo.title && changeInfo.status !== 'complete') {
     return;
   }
 
   const [storedName, storedIcon] = await Promise.all([
-    getStoredTabName(tabId),
-    getStoredTabIcon(tabId),
+    getStoredTabName(tabUrl),
+    getStoredTabIcon(tabUrl),
   ]);
 
   if (storedName && storedName !== tab.title) {
@@ -371,6 +390,12 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
 });
 
 chrome.tabs.onRemoved.addListener(async (tabId) => {
-  await clearStoredTabName(tabId);
-  await clearStoredTabIcon(tabId);
+  const tabUrl = tabUrlById.get(tabId);
+  if (!tabUrl) {
+    return;
+  }
+
+  tabUrlById.delete(tabId);
+  await clearStoredTabName(tabUrl);
+  await clearStoredTabIcon(tabUrl);
 });
