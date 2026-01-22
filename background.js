@@ -1,7 +1,9 @@
 const MENU_PAGE_ID = 'tabmagic-name-tab';
 const MENU_ACTION_ID = 'tabmagic-name-tab-toolbar';
+const MENU_GENERAL_SETTINGS_ID = 'tabmagic-general-settings';
 const TAB_NAME_PREFIX = 'tabName:';
 const TAB_ICON_PREFIX = 'tabIcon:';
+const GENERAL_SETTINGS_KEY = 'tabmagic:rules';
 
 const storage = chrome.storage.local;
 const tabUrlById = new Map();
@@ -18,9 +20,18 @@ const getStoredTabName = async (url) => {
   return result[key] ?? null;
 };
 
+const getStoredRules = async () => {
+  const result = await storage.get(GENERAL_SETTINGS_KEY);
+  return result[GENERAL_SETTINGS_KEY] ?? '';
+};
+
 const setStoredTabName = async (url, name) => {
   const key = getTabKey(url);
   await storage.set({ [key]: name });
+};
+
+const setStoredRules = async (rules) => {
+  await storage.set({ [GENERAL_SETTINGS_KEY]: rules });
 };
 
 const setStoredTabIcon = async (url, iconUrl) => {
@@ -177,6 +188,7 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
           const button = document.createElement('button');
           button.type = 'button';
           button.dataset.iconUrl = icon.url;
+          button.title = icon.name ?? labelText ?? '';
           button.style.cssText = [
             'width: 48px',
             'height: 48px',
@@ -299,6 +311,140 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
   return result?.result ?? null;
 };
 
+const openGeneralSettingsDialog = async (tabId, currentRules) => {
+  const [result] = await chrome.scripting.executeScript({
+    target: { tabId },
+    func: (dialogData) => {
+      const existingDialog = document.getElementById(
+        'tabmagic-general-settings-dialog',
+      );
+      if (existingDialog) {
+        existingDialog.remove();
+      }
+
+      return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.id = 'tabmagic-general-settings-dialog';
+        overlay.style.cssText = [
+          'position: fixed',
+          'inset: 0',
+          'background: rgba(0, 0, 0, 0.45)',
+          'display: flex',
+          'align-items: center',
+          'justify-content: center',
+          'z-index: 2147483647',
+        ].join(';');
+
+        const dialog = document.createElement('div');
+        dialog.style.cssText = [
+          'background: #ffffff',
+          'color: #111111',
+          'border-radius: 12px',
+          'padding: 20px',
+          'width: min(520px, 92vw)',
+          'box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2)',
+          'font-family: Arial, sans-serif',
+        ].join(';');
+
+        const title = document.createElement('h2');
+        title.textContent = 'General settings';
+        title.style.cssText = 'margin: 0 0 12px 0; font-size: 18px;';
+
+        const label = document.createElement('label');
+        label.textContent = 'Rules';
+        label.style.cssText = 'display: block; font-size: 13px; margin-bottom: 6px;';
+
+        const textarea = document.createElement('textarea');
+        textarea.value = dialogData.currentRules ?? '';
+        textarea.rows = 6;
+        textarea.style.cssText = [
+          'width: 100%',
+          'box-sizing: border-box',
+          'padding: 8px 10px',
+          'border-radius: 8px',
+          'border: 1px solid #d0d7de',
+          'margin-bottom: 16px',
+          'font-size: 14px',
+          'font-family: inherit',
+          'resize: vertical',
+        ].join(';');
+
+        const actions = document.createElement('div');
+        actions.style.cssText = 'display: flex; justify-content: flex-end; gap: 8px;';
+
+        const cancelButton = document.createElement('button');
+        cancelButton.type = 'button';
+        cancelButton.textContent = 'Cancel';
+        cancelButton.style.cssText = [
+          'border-radius: 8px',
+          'border: 1px solid #d0d7de',
+          'background: #ffffff',
+          'padding: 8px 14px',
+          'cursor: pointer',
+        ].join(';');
+
+        const saveButton = document.createElement('button');
+        saveButton.type = 'button';
+        saveButton.textContent = 'Save';
+        saveButton.style.cssText = [
+          'border-radius: 8px',
+          'border: none',
+          'background: #2563eb',
+          'color: #ffffff',
+          'padding: 8px 14px',
+          'cursor: pointer',
+        ].join(';');
+
+        const cleanup = () => {
+          overlay.remove();
+          document.removeEventListener('keydown', onKeyDown);
+        };
+
+        const handleCancel = () => {
+          cleanup();
+          resolve(null);
+        };
+
+        const handleSave = () => {
+          cleanup();
+          resolve({
+            rules: textarea.value,
+          });
+        };
+
+        const onKeyDown = (event) => {
+          if (event.key === 'Escape') {
+            handleCancel();
+          }
+        };
+
+        cancelButton.addEventListener('click', handleCancel);
+        saveButton.addEventListener('click', handleSave);
+        document.addEventListener('keydown', onKeyDown);
+
+        actions.appendChild(cancelButton);
+        actions.appendChild(saveButton);
+
+        dialog.appendChild(title);
+        dialog.appendChild(label);
+        dialog.appendChild(textarea);
+        dialog.appendChild(actions);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        textarea.focus();
+      });
+    },
+    args: [
+      {
+        currentRules,
+      },
+    ],
+  });
+
+  return result?.result ?? null;
+};
+
 const ensureContextMenu = () => {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
@@ -309,6 +455,11 @@ const ensureContextMenu = () => {
     chrome.contextMenus.create({
       id: MENU_ACTION_ID,
       title: 'Configure tab',
+      contexts: ['action'],
+    });
+    chrome.contextMenus.create({
+      id: MENU_GENERAL_SETTINGS_ID,
+      title: 'General settings',
       contexts: ['action'],
     });
   });
@@ -348,11 +499,32 @@ const handleConfigureTab = async (tab) => {
   await setTabIcon(tab.id, normalizedIconUrl);
 };
 
+const handleGeneralSettings = async (tab) => {
+  if (!tab?.id) {
+    return;
+  }
+
+  const currentRules = await getStoredRules();
+  const result = await openGeneralSettingsDialog(tab.id, currentRules);
+
+  if (!result) {
+    return;
+  }
+
+  await setStoredRules(result.rules ?? '');
+};
+
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (
     info.menuItemId !== MENU_PAGE_ID &&
-    info.menuItemId !== MENU_ACTION_ID
+    info.menuItemId !== MENU_ACTION_ID &&
+    info.menuItemId !== MENU_GENERAL_SETTINGS_ID
   ) {
+    return;
+  }
+
+  if (info.menuItemId === MENU_GENERAL_SETTINGS_ID) {
+    await handleGeneralSettings(tab);
     return;
   }
 
