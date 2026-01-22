@@ -75,11 +75,11 @@ const setTabIcon = async (tabId, url) => {
 };
 
 const AVAILABLE_ICONS = [
-  'dial-svgrepo-com.svg',
-  'menu-svgrepo-com.svg',
-  'pen-svgrepo-com.svg',
-  'placeholder.svg',
-  'subscription-svgrepo-com.svg',
+  'dial-svgrepo-com.ico',
+  'menu-svgrepo-com.ico',
+  'pen-svgrepo-com.ico',
+  'placeholder.ico',
+  'subscription-svgrepo-com.ico',
 ];
 
 const getAvailableIcons = () =>
