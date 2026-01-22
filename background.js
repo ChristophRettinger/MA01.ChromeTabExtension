@@ -17,6 +17,13 @@ const getTabIconKey = (url) => `${TAB_ICON_PREFIX}${encodeURIComponent(url)}`;
 const getTabUrl = (tab, changeInfo = {}) =>
   changeInfo.url ?? tab?.url ?? tab?.pendingUrl ?? '';
 
+const isRestrictedTabUrl = (url = '') =>
+  url.startsWith('chrome://') ||
+  url.startsWith('chrome-extension://') ||
+  url.startsWith('devtools://') ||
+  url.startsWith('edge://') ||
+  url.startsWith('about:');
+
 const getStoredTabName = async (url) => {
   const key = getTabKey(url);
   const result = await storage.get(key);
@@ -214,6 +221,9 @@ const updateRuleCheckSchedule = async (intervalMinutes) => {
 const refreshTabAppearance = async (tabId, tab, tabUrl) => {
   const url = tabUrl ?? getTabUrl(tab);
   if (!url) {
+    return;
+  }
+  if (isRestrictedTabUrl(url)) {
     return;
   }
 
@@ -683,6 +693,9 @@ const handleConfigureTab = async (tab) => {
   if (!tabUrl) {
     return;
   }
+  if (isRestrictedTabUrl(tabUrl)) {
+    return;
+  }
 
   tabUrlById.set(tab.id, tabUrl);
   const storedName = await getStoredTabName(tabUrl);
@@ -707,6 +720,10 @@ const handleConfigureTab = async (tab) => {
 
 const handleGeneralSettings = async (tab) => {
   if (!tab?.id) {
+    return;
+  }
+  const tabUrl = getTabUrl(tab);
+  if (isRestrictedTabUrl(tabUrl)) {
     return;
   }
 
