@@ -6,7 +6,7 @@
   "action": {
     "default_title": "TabMagic",
     "default_icon": {
-      "128": "icons/placeholder.ico"
+      "128": "icons/Red_01.png"
     }
   },
   "background": {
@@ -21,6 +21,6 @@
     }
   ],
   "icons": {
-    "128": "icons/placeholder.ico"
+    "128": "icons/Red_01.png"
   }
 }
