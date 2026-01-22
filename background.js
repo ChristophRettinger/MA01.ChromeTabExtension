@@ -119,6 +119,10 @@ const AVAILABLE_ICONS = [
   'DarkTeal_2.png',
   'DarkTeal_3.png',
   'DarkTeal_4.png',
+  'Elastic.png',
+  'ElasticDim.png',
+  'ElasticGray.png',
+  'ElasticSepia.png',
   'ErrorEmails.png',
   'Peach_1.png',
   'Peach_2.png',
@@ -176,11 +180,14 @@ const parseRules = (rulesText) =>
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
     .map((line) => {
-      const [pattern, nameTemplate, iconTemplate] = line
-        .split(',')
-        .map((part) => part.trim());
+      const [rawPattern, rawName, rawIcon] = line.split(',');
+      const pattern = rawPattern?.trim();
+      const nameTemplate = rawName?.trim() ?? '';
+      const iconTemplate = rawIcon?.trim() ?? '';
+      const hasName = Boolean(nameTemplate);
+      const hasIcon = Boolean(iconTemplate);
 
-      if (!pattern || !nameTemplate) {
+      if (!pattern || (!hasName && !hasIcon)) {
         return null;
       }
 
@@ -189,7 +196,7 @@ const parseRules = (rulesText) =>
           regex: new RegExp(pattern),
           nameTemplate,
           iconTemplate,
-          hasIcon: line.split(',').length >= 3,
+          hasIcon,
         };
       } catch (error) {
         console.warn('TabMagic: invalid regex rule', pattern, error);
@@ -404,7 +411,12 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
         });
 
         const actions = document.createElement('div');
-        actions.style.cssText = 'display: flex; justify-content: flex-end; gap: 8px;';
+        actions.style.cssText = [
+          'display: flex',
+          'justify-content: space-between',
+          'align-items: center',
+          'gap: 8px',
+        ].join(';');
 
         const cancelButton = document.createElement('button');
         cancelButton.type = 'button';
@@ -429,6 +441,17 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
           'cursor: pointer',
         ].join(';');
 
+        const resetButton = document.createElement('button');
+        resetButton.type = 'button';
+        resetButton.textContent = 'Reset';
+        resetButton.style.cssText = [
+          'border-radius: 8px',
+          'border: 1px solid #d0d7de',
+          'background: #f9fafb',
+          'padding: 8px 14px',
+          'cursor: pointer',
+        ].join(';');
+
         const cleanup = () => {
           overlay.remove();
           document.removeEventListener('keydown', onKeyDown);
@@ -437,6 +460,11 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
         const handleCancel = () => {
           cleanup();
           resolve(null);
+        };
+
+        const handleReset = () => {
+          cleanup();
+          resolve({ reset: true });
         };
 
         const handleSave = () => {
@@ -454,11 +482,17 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
         };
 
         cancelButton.addEventListener('click', handleCancel);
+        resetButton.addEventListener('click', handleReset);
         saveButton.addEventListener('click', handleSave);
         document.addEventListener('keydown', onKeyDown);
 
-        actions.appendChild(cancelButton);
-        actions.appendChild(saveButton);
+        const actionGroup = document.createElement('div');
+        actionGroup.style.cssText = 'display: flex; gap: 8px;';
+        actionGroup.appendChild(cancelButton);
+        actionGroup.appendChild(saveButton);
+
+        actions.appendChild(resetButton);
+        actions.appendChild(actionGroup);
 
         dialog.appendChild(title);
         dialog.appendChild(label);
@@ -722,6 +756,13 @@ const handleConfigureTab = async (tab) => {
   );
 
   if (!result) {
+    return;
+  }
+
+  if (result.reset) {
+    await clearStoredTabName(tabUrl);
+    await clearStoredTabIcon(tabUrl);
+    await chrome.tabs.reload(tab.id);
     return;
   }
 
