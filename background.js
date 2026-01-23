@@ -232,10 +232,14 @@ const applyTemplate = (template, match) =>
 const getRuleMatch = (url, rulesText) => {
   const decodedUrl = decodeUrl(url);
   const rules = parseRules(rulesText);
+  const candidates =
+    decodedUrl && decodedUrl !== url ? [decodedUrl, url] : [url];
   for (const rule of rules) {
-    const match = getRegexMatch(rule.regex, decodedUrl);
-    if (match) {
-      return { ...rule, match };
+    for (const candidate of candidates) {
+      const match = getRegexMatch(rule.regex, candidate);
+      if (match) {
+        return { ...rule, match };
+      }
     }
   }
   return null;
@@ -825,10 +829,14 @@ const openGeneralSettingsDialog = async (
 
       const getRuleMatch = (rules, url) => {
         const decodedUrl = decodeUrl(url);
+        const candidates =
+          decodedUrl && decodedUrl !== url ? [decodedUrl, url] : [url];
         for (const rule of rules) {
-          const match = getRegexMatch(rule.regex, decodedUrl);
-          if (match) {
-            return { ...rule, match };
+          for (const candidate of candidates) {
+            const match = getRegexMatch(rule.regex, candidate);
+            if (match) {
+              return { ...rule, match };
+            }
           }
         }
         return null;
