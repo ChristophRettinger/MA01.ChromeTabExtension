@@ -181,7 +181,7 @@ const parseRules = (rulesText) =>
     .map((line) => line.trim())
     .filter((line) => line.length > 0 && !line.startsWith('#'))
     .map((line) => {
-      const [rawPattern, rawName, rawIcon] = line.split(',');
+      const [rawPattern, rawName, rawIcon] = line.split(';');
       const pattern = rawPattern?.trim();
       const nameTemplate = rawName?.trim() ?? '';
       const iconTemplate = rawIcon?.trim() ?? '';
@@ -589,7 +589,7 @@ const openGeneralSettingsDialog = async (
 
       const helper = document.createElement('p');
       helper.textContent =
-        'One rule per line: regex, tab name, optional icon name.';
+        'One rule per line: regex; tab name; optional icon name.';
       helper.style.cssText = [
         'margin: 0 0 10px 0',
         'font-size: 12px',
@@ -777,7 +777,7 @@ const openGeneralSettingsDialog = async (
           .map((line) => line.trim())
           .filter((line) => line.length > 0 && !line.startsWith('#'))
           .map((line) => {
-            const [rawPattern, rawName, rawIcon] = line.split(',');
+            const [rawPattern, rawName, rawIcon] = line.split(';');
             const pattern = rawPattern?.trim();
             const nameTemplate = rawName?.trim() ?? '';
             const iconTemplate = rawIcon?.trim() ?? '';
