@@ -179,7 +179,7 @@ const parseRules = (rulesText) =>
   rulesText
     .split('\n')
     .map((line) => line.trim())
-    .filter((line) => line.length > 0)
+    .filter((line) => line.length > 0 && !line.startsWith('#'))
     .map((line) => {
       const [rawPattern, rawName, rawIcon] = line.split(',');
       const pattern = rawPattern?.trim();
@@ -212,8 +212,22 @@ const getRegexMatch = (regex, url) => {
   return matcher.exec(url);
 };
 
-const applyTemplate = (template, match) =>
-  template.replace(/\$(\d+)/g, (_, index) => match?.[Number(index)] ?? '');
+const decodeMatchValue = (value) => {
+  if (!value) {
+    return value;
+  }
+  try {
+    return decodeURIComponent(value);
+  } catch (error) {
+    return value;
+  }
+};
+
+const applyTemplate = (template, match, { decode } = {}) =>
+  template.replace(/\$(\d+)/g, (_, index) => {
+    const value = match?.[Number(index)] ?? '';
+    return decode ? decodeMatchValue(value) : value;
+  });
 
 const getRuleMatch = (url, rulesText) => {
   const rules = parseRules(rulesText);
@@ -260,7 +274,9 @@ const refreshTabAppearance = async (tabId, tab, tabUrl) => {
   if (storedName && storedName !== tab?.title) {
     await setTabTitle(tabId, storedName);
   } else if (needsRuleName && ruleMatch?.nameTemplate) {
-    const nextTitle = applyTemplate(ruleMatch.nameTemplate, ruleMatch.match);
+    const nextTitle = applyTemplate(ruleMatch.nameTemplate, ruleMatch.match, {
+      decode: true,
+    });
     if (nextTitle && nextTitle !== tab?.title) {
       await setTabTitle(tabId, nextTitle);
     }
@@ -526,6 +542,7 @@ const openGeneralSettingsDialog = async (
   currentRules,
   currentIntervalMinutes,
 ) => {
+  const tabs = await chrome.tabs.query({});
   const [result] = await chrome.scripting.executeScript({
     target: { tabId },
     func: (dialogData) => {
@@ -555,7 +572,11 @@ const openGeneralSettingsDialog = async (
           'color: #111111',
           'border-radius: 12px',
           'padding: 20px',
-          'width: min(520px, 92vw)',
+          'width: min(1040px, 92vw)',
+          'height: min(720px, 90vh)',
+          'max-height: 90vh',
+          'display: flex',
+          'flex-direction: column',
           'box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2)',
           'font-family: Arial, sans-serif',
         ].join(';');
@@ -579,7 +600,7 @@ const openGeneralSettingsDialog = async (
 
         const textarea = document.createElement('textarea');
         textarea.value = dialogData.currentRules ?? '';
-        textarea.rows = 6;
+        textarea.rows = 12;
         textarea.style.cssText = [
           'width: 100%',
           'box-sizing: border-box',
@@ -590,7 +611,44 @@ const openGeneralSettingsDialog = async (
           'font-size: 14px',
           'font-family: inherit',
           'resize: vertical',
+          'min-height: 240px',
         ].join(';');
+
+        const previewLabel = document.createElement('label');
+        previewLabel.style.cssText =
+          'display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 10px;';
+
+        const previewCheckbox = document.createElement('input');
+        previewCheckbox.type = 'checkbox';
+
+        const previewText = document.createElement('span');
+        previewText.textContent = 'Show preview';
+
+        previewLabel.appendChild(previewCheckbox);
+        previewLabel.appendChild(previewText);
+
+        const previewSection = document.createElement('div');
+        previewSection.style.cssText = [
+          'border: 1px solid #e5e7eb',
+          'border-radius: 10px',
+          'padding: 12px',
+          'margin-bottom: 16px',
+          'display: none',
+          'max-height: 240px',
+          'overflow: auto',
+          'background: #f9fafb',
+        ].join(';');
+
+        const previewList = document.createElement('ul');
+        previewList.style.cssText = [
+          'list-style: none',
+          'padding: 0',
+          'margin: 0',
+          'display: grid',
+          'gap: 10px',
+        ].join(';');
+
+        previewSection.appendChild(previewList);
 
         const intervalLabel = document.createElement('label');
         intervalLabel.textContent = 'Refresh interval';
@@ -628,7 +686,12 @@ const openGeneralSettingsDialog = async (
         intervalSelect.value = String(dialogData.currentIntervalMinutes ?? 5);
 
         const actions = document.createElement('div');
-        actions.style.cssText = 'display: flex; justify-content: flex-end; gap: 8px;';
+        actions.style.cssText = [
+          'display: flex',
+          'justify-content: flex-end',
+          'gap: 8px',
+          'margin-top: auto',
+        ].join(';');
 
         const cancelButton = document.createElement('button');
         cancelButton.type = 'button';
@@ -684,15 +747,147 @@ const openGeneralSettingsDialog = async (
         actions.appendChild(cancelButton);
         actions.appendChild(saveButton);
 
+        const content = document.createElement('div');
+        content.style.cssText = [
+          'display: flex',
+          'flex-direction: column',
+          'overflow: auto',
+          'padding-right: 4px',
+        ].join(';');
+
+        content.appendChild(label);
+        content.appendChild(helper);
+        content.appendChild(textarea);
+        content.appendChild(previewLabel);
+        content.appendChild(previewSection);
+        content.appendChild(intervalLabel);
+        content.appendChild(intervalSelect);
+
         dialog.appendChild(title);
-        dialog.appendChild(label);
-        dialog.appendChild(helper);
-        dialog.appendChild(textarea);
-        dialog.appendChild(intervalLabel);
-        dialog.appendChild(intervalSelect);
+        dialog.appendChild(content);
         dialog.appendChild(actions);
         overlay.appendChild(dialog);
         document.body.appendChild(overlay);
+
+        const parseRules = (rulesText) =>
+          rulesText
+            .split('\n')
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0 && !line.startsWith('#'))
+            .map((line) => {
+              const [rawPattern, rawName, rawIcon] = line.split(',');
+              const pattern = rawPattern?.trim();
+              const nameTemplate = rawName?.trim() ?? '';
+              const iconTemplate = rawIcon?.trim() ?? '';
+              const hasName = Boolean(nameTemplate);
+              const hasIcon = Boolean(iconTemplate);
+
+              if (!pattern || (!hasName && !hasIcon)) {
+                return null;
+              }
+
+              try {
+                return {
+                  regex: new RegExp(pattern),
+                  nameTemplate,
+                  iconTemplate,
+                };
+              } catch (error) {
+                return null;
+              }
+            })
+            .filter(Boolean);
+
+        const getRegexMatch = (regex, url) => {
+          const flags = regex.flags.replace('g', '');
+          const matcher = new RegExp(regex.source, flags);
+          return matcher.exec(url);
+        };
+
+        const decodeMatchValue = (value) => {
+          if (!value) {
+            return value;
+          }
+          try {
+            return decodeURIComponent(value);
+          } catch (error) {
+            return value;
+          }
+        };
+
+        const applyTemplate = (template, match, { decode } = {}) =>
+          template.replace(/\$(\d+)/g, (_, index) => {
+            const value = match?.[Number(index)] ?? '';
+            return decode ? decodeMatchValue(value) : value;
+          });
+
+        const getRuleMatch = (rules, url) => {
+          for (const rule of rules) {
+            const match = getRegexMatch(rule.regex, url);
+            if (match) {
+              return { ...rule, match };
+            }
+          }
+          return null;
+        };
+
+        const renderPreview = () => {
+          previewList.innerHTML = '';
+          if (!previewCheckbox.checked) {
+            previewSection.style.display = 'none';
+            return;
+          }
+
+          previewSection.style.display = 'block';
+          const rules = parseRules(textarea.value ?? '');
+          dialogData.tabs.forEach((tab) => {
+            const listItem = document.createElement('li');
+            listItem.style.cssText = [
+              'background: #ffffff',
+              'border-radius: 8px',
+              'padding: 10px',
+              'border: 1px solid #e5e7eb',
+              'display: grid',
+              'gap: 6px',
+            ].join(';');
+
+            const urlLine = document.createElement('div');
+            urlLine.textContent = tab.url || '(no url)';
+            urlLine.style.cssText = 'font-size: 12px; color: #374151;';
+
+            const ruleMatch = tab.url ? getRuleMatch(rules, tab.url) : null;
+            const changes = [];
+            if (ruleMatch?.nameTemplate) {
+              const title = applyTemplate(ruleMatch.nameTemplate, ruleMatch.match, {
+                decode: true,
+              });
+              if (title) {
+                changes.push(`Title: ${title}`);
+              }
+            }
+            if (ruleMatch?.iconTemplate) {
+              const iconName = applyTemplate(
+                ruleMatch.iconTemplate,
+                ruleMatch.match,
+              );
+              if (iconName) {
+                changes.push(`Icon: ${iconName}`);
+              }
+            }
+
+            const changesLine = document.createElement('div');
+            changesLine.textContent =
+              changes.length > 0 ? changes.join(' • ') : 'No changes';
+            changesLine.style.cssText = 'font-size: 12px; color: #6b7280;';
+
+            listItem.appendChild(urlLine);
+            listItem.appendChild(changesLine);
+            previewList.appendChild(listItem);
+          });
+        };
+
+        previewCheckbox.addEventListener('change', renderPreview);
+        textarea.addEventListener('input', renderPreview);
 
         textarea.focus();
       });
@@ -701,6 +896,7 @@ const openGeneralSettingsDialog = async (
       {
         currentRules,
         currentIntervalMinutes,
+        tabs: tabs.map((tab) => ({ url: tab.url ?? '' })),
       },
     ],
   });
