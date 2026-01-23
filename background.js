@@ -212,27 +212,28 @@ const getRegexMatch = (regex, url) => {
   return matcher.exec(url);
 };
 
-const decodeMatchValue = (value) => {
-  if (!value) {
-    return value;
+const decodeUrl = (url) => {
+  if (!url) {
+    return url;
   }
   try {
-    return decodeURIComponent(value);
+    return decodeURIComponent(url);
   } catch (error) {
-    return value;
+    return url;
   }
 };
 
-const applyTemplate = (template, match, { decode } = {}) =>
+const applyTemplate = (template, match) =>
   template.replace(/\$(\d+)/g, (_, index) => {
     const value = match?.[Number(index)] ?? '';
-    return decode ? decodeMatchValue(value) : value;
+    return value;
   });
 
 const getRuleMatch = (url, rulesText) => {
+  const decodedUrl = decodeUrl(url);
   const rules = parseRules(rulesText);
   for (const rule of rules) {
-    const match = getRegexMatch(rule.regex, url);
+    const match = getRegexMatch(rule.regex, decodedUrl);
     if (match) {
       return { ...rule, match };
     }
@@ -274,9 +275,7 @@ const refreshTabAppearance = async (tabId, tab, tabUrl) => {
   if (storedName && storedName !== tab?.title) {
     await setTabTitle(tabId, storedName);
   } else if (needsRuleName && ruleMatch?.nameTemplate) {
-    const nextTitle = applyTemplate(ruleMatch.nameTemplate, ruleMatch.match, {
-      decode: true,
-    });
+    const nextTitle = applyTemplate(ruleMatch.nameTemplate, ruleMatch.match);
     if (nextTitle && nextTitle !== tab?.title) {
       await setTabTitle(tabId, nextTitle);
     }
@@ -807,26 +806,27 @@ const openGeneralSettingsDialog = async (
         return matcher.exec(url);
       };
 
-      const decodeMatchValue = (value) => {
-        if (!value) {
-          return value;
+      const decodeUrl = (url) => {
+        if (!url) {
+          return url;
         }
         try {
-          return decodeURIComponent(value);
+          return decodeURIComponent(url);
         } catch (error) {
-          return value;
+          return url;
         }
       };
 
-      const applyTemplate = (template, match, { decode } = {}) =>
+      const applyTemplate = (template, match) =>
         template.replace(/\$(\d+)/g, (_, index) => {
           const value = match?.[Number(index)] ?? '';
-          return decode ? decodeMatchValue(value) : value;
+          return value;
         });
 
       const getRuleMatch = (rules, url) => {
+        const decodedUrl = decodeUrl(url);
         for (const rule of rules) {
-          const match = getRegexMatch(rule.regex, url);
+          const match = getRegexMatch(rule.regex, decodedUrl);
           if (match) {
             return { ...rule, match };
           }
@@ -861,9 +861,10 @@ const openGeneralSettingsDialog = async (
           const ruleMatch = tab.url ? getRuleMatch(rules, tab.url) : null;
           const changes = [];
           if (ruleMatch?.nameTemplate) {
-            const title = applyTemplate(ruleMatch.nameTemplate, ruleMatch.match, {
-              decode: true,
-            });
+            const title = applyTemplate(
+              ruleMatch.nameTemplate,
+              ruleMatch.match,
+            );
             if (title) {
               changes.push(`Title: ${title}`);
             }
