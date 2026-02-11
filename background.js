@@ -321,6 +321,7 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
       return new Promise((resolve) => {
         const overlay = document.createElement('div');
         overlay.id = 'tabmagic-config-dialog';
+        overlay.tabIndex = -1;
         overlay.style.cssText = [
           'position: fixed',
           'inset: 0',
@@ -330,6 +331,17 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
           'justify-content: center',
           'z-index: 2147483647',
         ].join(';');
+
+        const inertState = Array.from(document.body.children)
+          .filter((element) => element !== overlay)
+          .map((element) => ({
+            element,
+            hadInert: element.hasAttribute('inert'),
+          }));
+
+        inertState.forEach(({ element }) => {
+          element.setAttribute('inert', '');
+        });
 
         const dialog = document.createElement('div');
         dialog.style.cssText = [
@@ -475,6 +487,12 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
         const cleanup = () => {
           overlay.remove();
           document.removeEventListener('keydown', onKeyDown);
+          document.removeEventListener('focusin', onFocusIn, true);
+          inertState.forEach(({ element, hadInert }) => {
+            if (!hadInert) {
+              element.removeAttribute('inert');
+            }
+          });
         };
 
         const handleCancel = () => {
@@ -501,10 +519,20 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
           }
         };
 
+        const onFocusIn = (event) => {
+          if (overlay.contains(event.target)) {
+            return;
+          }
+
+          event.stopPropagation();
+          input.focus({ preventScroll: true });
+        };
+
         cancelButton.addEventListener('click', handleCancel);
         resetButton.addEventListener('click', handleReset);
         saveButton.addEventListener('click', handleSave);
         document.addEventListener('keydown', onKeyDown);
+        document.addEventListener('focusin', onFocusIn, true);
 
         const actionGroup = document.createElement('div');
         actionGroup.style.cssText = 'display: flex; gap: 8px;';
@@ -524,7 +552,8 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
         document.body.appendChild(overlay);
 
         updateSelection(selectedIconUrl);
-        input.focus();
+        overlay.focus({ preventScroll: true });
+        input.focus({ preventScroll: true });
         input.select();
       });
     },
@@ -558,6 +587,7 @@ const openGeneralSettingsDialog = async (
 
       const overlay = document.createElement('div');
       overlay.id = 'tabmagic-general-settings-dialog';
+      overlay.tabIndex = -1;
       overlay.style.cssText = [
         'position: fixed',
         'inset: 0',
@@ -567,6 +597,17 @@ const openGeneralSettingsDialog = async (
         'justify-content: center',
         'z-index: 2147483647',
       ].join(';');
+
+      const inertState = Array.from(document.body.children)
+        .filter((element) => element !== overlay)
+        .map((element) => ({
+          element,
+          hadInert: element.hasAttribute('inert'),
+        }));
+
+      inertState.forEach(({ element }) => {
+        element.setAttribute('inert', '');
+      });
 
       const dialog = document.createElement('div');
       dialog.style.cssText = [
@@ -721,6 +762,12 @@ const openGeneralSettingsDialog = async (
       const cleanup = () => {
         overlay.remove();
         document.removeEventListener('keydown', onKeyDown);
+        document.removeEventListener('focusin', onFocusIn, true);
+        inertState.forEach(({ element, hadInert }) => {
+          if (!hadInert) {
+            element.removeAttribute('inert');
+          }
+        });
       };
 
       const handleCancel = () => {
@@ -746,9 +793,19 @@ const openGeneralSettingsDialog = async (
         }
       };
 
+      const onFocusIn = (event) => {
+        if (overlay.contains(event.target)) {
+          return;
+        }
+
+        event.stopPropagation();
+        textarea.focus({ preventScroll: true });
+      };
+
       cancelButton.addEventListener('click', handleCancel);
       saveButton.addEventListener('click', sendSave);
       document.addEventListener('keydown', onKeyDown);
+      document.addEventListener('focusin', onFocusIn, true);
 
       actions.appendChild(cancelButton);
       actions.appendChild(saveButton);
@@ -901,7 +958,8 @@ const openGeneralSettingsDialog = async (
       previewCheckbox.addEventListener('change', renderPreview);
       textarea.addEventListener('input', renderPreview);
 
-      textarea.focus();
+      overlay.focus({ preventScroll: true });
+      textarea.focus({ preventScroll: true });
     },
     args: [
       {
