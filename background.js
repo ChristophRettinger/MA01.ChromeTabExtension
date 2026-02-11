@@ -488,6 +488,10 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
           overlay.remove();
           document.removeEventListener('keydown', onKeyDown);
           document.removeEventListener('focusin', onFocusIn, true);
+          document.removeEventListener('pointerdown', onPointerDown, true);
+          document.removeEventListener('mousedown', onPointerDown, true);
+          document.removeEventListener('click', onPointerDown, true);
+          window.clearInterval(focusWatchdogId);
           inertState.forEach(({ element, hadInert }) => {
             if (!hadInert) {
               element.removeAttribute('inert');
@@ -524,15 +528,45 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
             return;
           }
 
+          console.log('TabMagic: blocked outside focus while Configure tab is open');
           event.stopPropagation();
+          event.preventDefault();
           input.focus({ preventScroll: true });
         };
+
+        const onPointerDown = (event) => {
+          if (overlay.contains(event.target)) {
+            return;
+          }
+
+          console.log('TabMagic: blocked outside pointer event while Configure tab is open');
+          event.stopPropagation();
+          event.preventDefault();
+          input.focus({ preventScroll: true });
+        };
+
+        const focusWatchdogId = window.setInterval(() => {
+          if (!document.body.contains(overlay)) {
+            return;
+          }
+
+          const activeElement = document.activeElement;
+          if (activeElement && overlay.contains(activeElement)) {
+            return;
+          }
+
+          console.log('TabMagic: restoring Configure tab dialog focus', activeElement);
+          input.focus({ preventScroll: true });
+        }, 200);
 
         cancelButton.addEventListener('click', handleCancel);
         resetButton.addEventListener('click', handleReset);
         saveButton.addEventListener('click', handleSave);
         document.addEventListener('keydown', onKeyDown);
         document.addEventListener('focusin', onFocusIn, true);
+        document.addEventListener('pointerdown', onPointerDown, true);
+        document.addEventListener('mousedown', onPointerDown, true);
+        document.addEventListener('click', onPointerDown, true);
 
         const actionGroup = document.createElement('div');
         actionGroup.style.cssText = 'display: flex; gap: 8px;';
@@ -763,6 +797,10 @@ const openGeneralSettingsDialog = async (
         overlay.remove();
         document.removeEventListener('keydown', onKeyDown);
         document.removeEventListener('focusin', onFocusIn, true);
+        document.removeEventListener('pointerdown', onPointerDown, true);
+        document.removeEventListener('mousedown', onPointerDown, true);
+        document.removeEventListener('click', onPointerDown, true);
+        window.clearInterval(focusWatchdogId);
         inertState.forEach(({ element, hadInert }) => {
           if (!hadInert) {
             element.removeAttribute('inert');
@@ -798,14 +836,44 @@ const openGeneralSettingsDialog = async (
           return;
         }
 
+        console.log('TabMagic: blocked outside focus while General settings is open');
         event.stopPropagation();
+        event.preventDefault();
         textarea.focus({ preventScroll: true });
       };
+
+      const onPointerDown = (event) => {
+        if (overlay.contains(event.target)) {
+          return;
+        }
+
+        console.log('TabMagic: blocked outside pointer event while General settings is open');
+        event.stopPropagation();
+        event.preventDefault();
+        textarea.focus({ preventScroll: true });
+      };
+
+      const focusWatchdogId = window.setInterval(() => {
+        if (!document.body.contains(overlay)) {
+          return;
+        }
+
+        const activeElement = document.activeElement;
+        if (activeElement && overlay.contains(activeElement)) {
+          return;
+        }
+
+        console.log('TabMagic: restoring General settings dialog focus', activeElement);
+        textarea.focus({ preventScroll: true });
+      }, 200);
 
       cancelButton.addEventListener('click', handleCancel);
       saveButton.addEventListener('click', sendSave);
       document.addEventListener('keydown', onKeyDown);
       document.addEventListener('focusin', onFocusIn, true);
+      document.addEventListener('pointerdown', onPointerDown, true);
+      document.addEventListener('mousedown', onPointerDown, true);
+      document.addEventListener('click', onPointerDown, true);
 
       actions.appendChild(cancelButton);
       actions.appendChild(saveButton);
