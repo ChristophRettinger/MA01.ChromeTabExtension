@@ -23,6 +23,8 @@
     }
   ],
   "icons": {
-    "128": "icons/TabMagic.ico"
+      "128": "xticons/TabMagic_128.png",
+      "48": "xticons/TabMagic_48.png",
+      "16": "xticons/TabMagic_16.png"
   }
 }
