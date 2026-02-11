@@ -143,8 +143,7 @@ const AVAILABLE_ICONS = [
   'SoftTurquise_1.png',
   'SoftTurquise_2.png',
   'SoftTurquise_3.png',
-  'SoftTurquise_4.png',
-  'TabMagic.ico',
+  'SoftTurquise_4.png'
 ];
 
 const getAvailableIcons = () =>

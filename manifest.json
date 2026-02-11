@@ -6,7 +6,9 @@
   "action": {
     "default_title": "TabMagic",
     "default_icon": {
-      "128": "icons/TabMagic.ico"
+      "128": "xticons/TabMagic_128.png",
+      "48": "xticons/TabMagic_48.png",
+      "16": "xticons/TabMagic_16.png"
     }
   },
   "background": {
@@ -16,7 +18,7 @@
   "host_permissions": ["<all_urls>"],
   "web_accessible_resources": [
     {
-      "resources": ["icons/*.ico", "icons/*.png"],
+      "resources": ["xticons/*.png", "icons/*.png"],
       "matches": ["<all_urls>"]
     }
   ],
