@@ -12,7 +12,7 @@ TabMagic is a personal Chrome extension intended for developer mode installs. It
 
 ## Notes
 
-- Rules are entered one per line: `regex, tab name (optional), optional icon name`.
+- Rules are entered one per line: `regex; tab name (optional); optional icon name`.
 - Leave the tab name blank to only update the icon.
 - Regex replacements like `$1` are supported in names and icon names.
 
