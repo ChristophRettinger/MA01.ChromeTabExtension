@@ -109,7 +109,7 @@ foreach ($symbol in $symbols) {
 
     $gfx.DrawString($symbol.ToString(), $font, $textBrush, ($size/2), ($size/2), $sf)
 
-    $file = "$($Name)_$symbol.png"
+    $file = Join-Path $PSScriptRoot "$($Name)_$symbol.png"
     $bmp.Save($file, [System.Drawing.Imaging.ImageFormat]::Png)
 
     $gfx.Dispose()

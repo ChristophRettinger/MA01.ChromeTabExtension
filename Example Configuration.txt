@@ -1,0 +1,14 @@
+dev0(\d).esb.wienkav.at; WSK DEV $1; Sage_$1
+test0(\d).esb.wienkav.at; WSK TEST $1; Sand_$1
+mig0(\d).esb.wienkav.at; WSK MIG $1; Peach_$1
+prod0(\d).esb.wienkav.at; WSK PROD $1; Coral_$1
+esbprodb.wien.gv.at; PROD-B; Coral_B
+kb-obs.apps.zeus.wien.at.*BK.ERROR_sendemail; Error Emails; ErrorEmails
+kb-obs.apps.zeus.wien.at.*BK.SUBFL_workflow*\s*:\s*(?:"([^,)']*)"|([^,)\s']*)); $1$2; Elastic
+kb-obs.apps.zeus.wien.at.*query:.*BusinessCaseId*\s*:\s*(?:"([^,)']*)"|([^,)\s']*)); $1$2; Elastic
+kb-obs.apps.zeus.wien.at.*query:.*BK._PID\w*\s*:\s*(?:"([^,)']*)"|([^,)\s']*)); PID $1$2; Elastic
+kb-obs.apps.zeus.wien.at.*query:.*BK._CASENO\w*\s*:\s*(?:"([^,)']*)"|([^,)\s']*)); CASE $1$2; Elastic
+kb-obs.apps.zeus.wien.at.*query:.*BK._ORDERNR*\s*:\s*(?:"([^,)']*)"|([^,)\s']*)); AF $1$2; Elastic
+kb-obs.apps.zeus.wien.at.*query:.esql; ESQL; Elastic
+kb-obs.apps.zeus.wien.at;;ElasticSepia
+ 
