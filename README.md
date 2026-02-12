@@ -1,21 +1,26 @@
 # TabMagic
 
-TabMagic is a personal Chrome extension intended for developer mode installs. It supports manual tab naming plus automatic rules-based renaming.
+TabMagic is a Chrome extension for custom tab names and rule-based icon/title updates.
 
-## Installation (Developer Mode)
+## Project layout
 
-1. Open Chrome and navigate to `chrome://extensions`.
-2. Enable **Developer mode** (top-right toggle).
-3. Click **Load unpacked**.
-4. Select this project folder (`MA01.ChromeTabExtension`).
-5. Confirm the extension appears as **TabMagic**.
+- Root: markdown documentation.
+- `Extension/`: extension source (`manifest.json`, service worker, icons).
+- `Scripts/`: helper scripts (generated images in this folder are ignored; copy selected files to `Extension/icons/`).
 
-## Notes
+## Install (Developer mode)
 
-- Rules are entered one per line: `regex; tab name (optional); optional icon name`.
-- Leave the tab name blank to only update the icon.
-- Regex replacements like `$1` are supported in names and icon names.
+1. Open `chrome://extensions`.
+2. Enable **Developer mode**.
+3. Click **Load unpacked** and select the `Extension/` folder.
 
-## Icon Assets
+## Rules format
 
-- Icons live in `icons/` (PNG and ICO files, including `TabMagic.ico`).
+Use one rule per line:
+
+```text
+regex; tab name (optional); icon name (optional)
+```
+
+- Leave name blank to only change icon.
+- `$1`, `$2`, ... replacements are supported.
