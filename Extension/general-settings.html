@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TabMagic General Settings</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f6f8;
+        color: #111827;
+      }
+      main {
+        max-width: 980px;
+        margin: 20px auto;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        padding: 20px;
+      }
+      h1 { margin: 0 0 12px; font-size: 22px; }
+      p { margin: 0 0 12px; color: #4b5563; font-size: 13px; }
+      label { display: block; margin: 12px 0 6px; font-size: 13px; }
+      textarea,
+      select {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 14px;
+      }
+      textarea { min-height: 260px; resize: vertical; }
+      .actions {
+        margin-top: 16px;
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+      button {
+        border: 1px solid #d1d5db;
+        background: #fff;
+        border-radius: 8px;
+        padding: 8px 14px;
+        cursor: pointer;
+      }
+      button.primary {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+      }
+      #status { min-height: 18px; margin-top: 10px; font-size: 13px; color: #047857; }
+      #preview {
+        margin-top: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 10px;
+        background: #f9fafb;
+        display: none;
+      }
+      #preview ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+      #preview li { background: #fff; border-radius: 6px; padding: 8px; border: 1px solid #e5e7eb; }
+      .url { font-size: 12px; color: #374151; }
+      .change { font-size: 12px; color: #6b7280; margin-top: 4px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>General settings</h1>
+      <p>One rule per line: <code>regex; tab name; optional icon name</code>.</p>
+
+      <label for="rules">Rules</label>
+      <textarea id="rules"></textarea>
+
+      <label for="interval">Refresh interval</label>
+      <select id="interval"></select>
+
+      <label><input id="show-preview" type="checkbox" /> Show preview</label>
+      <section id="preview"><ul id="preview-list"></ul></section>
+
+      <div class="actions">
+        <button id="close">Close</button>
+        <button id="save" class="primary">Save</button>
+      </div>
+      <div id="status"></div>
+    </main>
+    <script src="general-settings.js"></script>
+  </body>
+</html>

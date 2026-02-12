@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TabMagic",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Personal extension to change tab names.",
   "action": {
     "default_title": "TabMagic",
@@ -14,17 +14,30 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": ["alarms", "contextMenus", "scripting", "tabs", "storage"],
-  "host_permissions": ["<all_urls>"],
+  "permissions": [
+    "alarms",
+    "contextMenus",
+    "scripting",
+    "tabs",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "web_accessible_resources": [
     {
-      "resources": ["xticons/*.png", "icons/*.png"],
-      "matches": ["<all_urls>"]
+      "resources": [
+        "xticons/*.png",
+        "icons/*.png"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
   ],
   "icons": {
-      "128": "xticons/TabMagic_128.png",
-      "48": "xticons/TabMagic_48.png",
-      "16": "xticons/TabMagic_16.png"
+    "128": "xticons/TabMagic_128.png",
+    "48": "xticons/TabMagic_48.png",
+    "16": "xticons/TabMagic_16.png"
   }
 }
