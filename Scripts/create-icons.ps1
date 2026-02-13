@@ -11,13 +11,15 @@ param(
     [Parameter(Mandatory)]
     [string]$Name = "Icon",
 
-    [ValidateSet("Number", "Letter")]
+    [ValidateSet("Number", "Letter", "Custom")]
     [string]$Mode = "Number",
 
     [int]$StartNumber = 1,
 
     [ValidatePattern('^[A-Za-z]$')]
-    [string]$StartLetter = "A"
+    [string]$StartLetter = "A",
+
+    [string]$CustomSymbols
 )
 
 Add-Type -AssemblyName System.Drawing
@@ -41,21 +43,49 @@ function Get-Symbols {
         [string]$Mode,
         [int]$Count,
         [int]$StartNumber,
-        [string]$StartLetter
+        [string]$StartLetter,
+        [string]$CustomSymbols
     )
 
     if ($Mode -eq "Number") {
         return ($StartNumber..($StartNumber + $Count - 1))
     }
 
-    $startCode = [int][char]$StartLetter.ToUpperInvariant()
-    if (($startCode + $Count - 1) -gt [int][char]'Z') {
-        throw "Letter mode supports A-Z only."
+    if ($Mode -eq "Letter") {
+        $startCode = [int][char]$StartLetter.ToUpperInvariant()
+        if (($startCode + $Count - 1) -gt [int][char]'Z') {
+            throw "Letter mode supports A-Z only."
+        }
+
+        $symbols = @()
+        for ($offset = 0; $offset -lt $Count; $offset++) {
+            $symbols += [char]($startCode + $offset)
+        }
+
+        return $symbols
     }
 
-    $symbols = @()
-    for ($offset = 0; $offset -lt $Count; $offset++) {
-        $symbols += [char]($startCode + $offset)
+    if ([string]::IsNullOrWhiteSpace($CustomSymbols)) {
+        throw "Custom mode requires -CustomSymbols (example: \"D,T,M,P\")."
+    }
+
+    $symbols = @(
+        ($CustomSymbols -split '[,\s]+' | ForEach-Object { $_.Trim() }) |
+            Where-Object { $_ -ne "" }
+    )
+
+    if ($symbols.Count -eq 0) {
+        throw "Custom mode requires at least one symbol."
+    }
+
+    if ($Count -ne $symbols.Count) {
+        throw "Count ($Count) must match the number of custom symbols ($($symbols.Count))."
+    }
+
+    foreach ($symbol in $symbols) {
+        if ($symbol -notmatch '^[A-Za-z0-9]$') {
+            throw "Custom symbols only support single letters or numbers. Invalid symbol: '$symbol'"
+        }
     }
 
     return $symbols
@@ -70,7 +100,7 @@ $fontSize   = 90
 $bgColorObj  = [System.Drawing.ColorTranslator]::FromHtml($BGColor)
 $fgColorObj  = [System.Drawing.ColorTranslator]::FromHtml($FGColor)
 $borderColor = Darken-Color $bgColorObj 30
-$symbols     = Get-Symbols -Mode $Mode -Count $Count -StartNumber $StartNumber -StartLetter $StartLetter
+$symbols     = Get-Symbols -Mode $Mode -Count $Count -StartNumber $StartNumber -StartLetter $StartLetter -CustomSymbols $CustomSymbols
 
 foreach ($symbol in $symbols) {
     $bmp = New-Object System.Drawing.Bitmap $size, $size
