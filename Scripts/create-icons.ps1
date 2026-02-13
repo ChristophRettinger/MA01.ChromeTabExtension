@@ -66,7 +66,7 @@ function Get-Symbols {
     }
 
     if ([string]::IsNullOrWhiteSpace($CustomSymbols)) {
-        throw "Custom mode requires -CustomSymbols (example: \"D,T,M,P\")."
+        throw "Custom mode requires -CustomSymbols (example: `"D,T,M,P`")."
     }
 
     $symbols = @(
