@@ -1,6 +1,5 @@
 param(
-    [Parameter(Mandatory)]
-    [int]$Count,
+    [Nullable[int]]$Count,
 
     [Parameter(Mandatory)]
     [string]$BGColor,
@@ -41,24 +40,34 @@ function Darken-Color {
 function Get-Symbols {
     param(
         [string]$Mode,
-        [int]$Count,
+        [Nullable[int]]$Count,
         [int]$StartNumber,
         [string]$StartLetter,
         [string]$CustomSymbols
     )
 
     if ($Mode -eq "Number") {
-        return ($StartNumber..($StartNumber + $Count - 1))
+        if ($null -ne $Count -and $Count -lt 1) {
+            throw "Count must be at least 1."
+        }
+
+        $effectiveCount = if ($null -eq $Count) { 1 } else { $Count }
+        return ($StartNumber..($StartNumber + $effectiveCount - 1))
     }
 
     if ($Mode -eq "Letter") {
+        if ($null -ne $Count -and $Count -lt 1) {
+            throw "Count must be at least 1."
+        }
+
+        $effectiveCount = if ($null -eq $Count) { 1 } else { $Count }
         $startCode = [int][char]$StartLetter.ToUpperInvariant()
-        if (($startCode + $Count - 1) -gt [int][char]'Z') {
+        if (($startCode + $effectiveCount - 1) -gt [int][char]'Z') {
             throw "Letter mode supports A-Z only."
         }
 
         $symbols = @()
-        for ($offset = 0; $offset -lt $Count; $offset++) {
+        for ($offset = 0; $offset -lt $effectiveCount; $offset++) {
             $symbols += [char]($startCode + $offset)
         }
 
@@ -76,10 +85,6 @@ function Get-Symbols {
 
     if ($symbols.Count -eq 0) {
         throw "Custom mode requires at least one symbol."
-    }
-
-    if ($Count -ne $symbols.Count) {
-        throw "Count ($Count) must match the number of custom symbols ($($symbols.Count))."
     }
 
     foreach ($symbol in $symbols) {
