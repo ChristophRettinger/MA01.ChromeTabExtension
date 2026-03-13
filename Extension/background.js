@@ -568,6 +568,18 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
           'font-family: Arial, sans-serif',
           'display: flex',
           'flex-direction: column',
+          'min-height: 0',
+        ].join(';');
+
+        const dialogBody = document.createElement('div');
+        dialogBody.style.cssText = [
+          'display: flex',
+          'flex-direction: column',
+          'flex: 1 1 auto',
+          'min-height: 0',
+          'overflow-y: auto',
+          'padding-right: 4px',
+          'margin-bottom: 12px',
         ].join(';');
 
         const title = document.createElement('h2');
@@ -882,6 +894,9 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
           'justify-content: space-between',
           'align-items: center',
           'gap: 8px',
+          'flex-shrink: 0',
+          'padding-top: 12px',
+          'border-top: 1px solid #e5e7eb',
         ].join(';');
 
         const cancelButton = document.createElement('button');
@@ -1010,17 +1025,19 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
         actions.appendChild(resetButton);
         actions.appendChild(actionGroup);
 
+        dialogBody.appendChild(label);
+        dialogBody.appendChild(input);
+        dialogBody.appendChild(iconLabel);
+        dialogBody.appendChild(colorSection);
+        dialogBody.appendChild(otherSection);
+
         dialog.appendChild(title);
-        dialog.appendChild(label);
-        dialog.appendChild(input);
-        dialog.appendChild(iconLabel);
-        dialog.appendChild(colorSection);
-        dialog.appendChild(otherSection);
+        dialog.appendChild(dialogBody);
         dialog.appendChild(actions);
         overlay.appendChild(dialog);
         document.body.appendChild(overlay);
 
-        updateSelection(selectedIconUrl);
+        refreshIconSelectionStyles();
         overlay.focus({ preventScroll: true });
         input.focus({ preventScroll: true });
         input.select();
