@@ -561,9 +561,13 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
           'color: #111111',
           'border-radius: 12px',
           'padding: 20px',
-          'width: min(480px, 90vw)',
+          'width: min(960px, 90vw)',
+          'max-height: min(90vh, 760px)',
+          'overflow: hidden',
           'box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2)',
           'font-family: Arial, sans-serif',
+          'display: flex',
+          'flex-direction: column',
         ].join(';');
 
         const title = document.createElement('h2');
@@ -593,6 +597,17 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
 
         const colorGroups = dialogData.colorGroups ?? [];
         const otherIcons = dialogData.otherIcons ?? [];
+        const iconGrid = document.createElement('div');
+        iconGrid.style.cssText = [
+          'display: flex',
+          'flex-wrap: wrap',
+          'gap: 8px',
+          'margin-bottom: 16px',
+          'overflow-y: auto',
+          'max-height: min(42vh, 360px)',
+          'padding-right: 4px',
+          'align-content: flex-start',
+        ].join(';');
 
         let selectedIconUrl = dialogData.currentIconUrl ?? '';
         const colorNameByUrl = new Map();
