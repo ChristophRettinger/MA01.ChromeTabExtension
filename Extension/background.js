@@ -103,6 +103,54 @@ const setTabIcon = async (tabId, url) => {
 };
 
 const AVAILABLE_ICONS = [
+  'Amber_1.png',
+  'Amber_2.png',
+  'Amber_3.png',
+  'Amber_4.png',
+  'Amber_A.png',
+  'Amber_B.png',
+  'Amber_C.png',
+  'Amber_D.png',
+  'Amber_M.png',
+  'Amber_P.png',
+  'Amber_Q.png',
+  'Amber_T.png',
+  'Blush_1.png',
+  'Blush_2.png',
+  'Blush_3.png',
+  'Blush_4.png',
+  'Blush_A.png',
+  'Blush_B.png',
+  'Blush_C.png',
+  'Blush_D.png',
+  'Blush_M.png',
+  'Blush_P.png',
+  'Blush_Q.png',
+  'Blush_T.png',
+  'Cobalt_1.png',
+  'Cobalt_2.png',
+  'Cobalt_3.png',
+  'Cobalt_4.png',
+  'Cobalt_A.png',
+  'Cobalt_B.png',
+  'Cobalt_C.png',
+  'Cobalt_D.png',
+  'Cobalt_M.png',
+  'Cobalt_P.png',
+  'Cobalt_Q.png',
+  'Cobalt_T.png',
+  'Copper_1.png',
+  'Copper_2.png',
+  'Copper_3.png',
+  'Copper_4.png',
+  'Copper_A.png',
+  'Copper_B.png',
+  'Copper_C.png',
+  'Copper_D.png',
+  'Copper_M.png',
+  'Copper_P.png',
+  'Copper_Q.png',
+  'Copper_T.png',
   'Coral_1.png',
   'Coral_2.png',
   'Coral_3.png',
@@ -132,6 +180,54 @@ const AVAILABLE_ICONS = [
   'ElasticGray.png',
   'ElasticSepia.png',
   'ErrorEmails.png',
+  'Forest_1.png',
+  'Forest_2.png',
+  'Forest_3.png',
+  'Forest_4.png',
+  'Forest_A.png',
+  'Forest_B.png',
+  'Forest_C.png',
+  'Forest_D.png',
+  'Forest_M.png',
+  'Forest_P.png',
+  'Forest_Q.png',
+  'Forest_T.png',
+  'Lagoon_1.png',
+  'Lagoon_2.png',
+  'Lagoon_3.png',
+  'Lagoon_4.png',
+  'Lagoon_A.png',
+  'Lagoon_B.png',
+  'Lagoon_C.png',
+  'Lagoon_D.png',
+  'Lagoon_M.png',
+  'Lagoon_P.png',
+  'Lagoon_Q.png',
+  'Lagoon_T.png',
+  'Midnight_1.png',
+  'Midnight_2.png',
+  'Midnight_3.png',
+  'Midnight_4.png',
+  'Midnight_A.png',
+  'Midnight_B.png',
+  'Midnight_C.png',
+  'Midnight_D.png',
+  'Midnight_M.png',
+  'Midnight_P.png',
+  'Midnight_Q.png',
+  'Midnight_T.png',
+  'Moss_1.png',
+  'Moss_2.png',
+  'Moss_3.png',
+  'Moss_4.png',
+  'Moss_A.png',
+  'Moss_B.png',
+  'Moss_C.png',
+  'Moss_D.png',
+  'Moss_M.png',
+  'Moss_P.png',
+  'Moss_Q.png',
+  'Moss_T.png',
   'Peach_1.png',
   'Peach_2.png',
   'Peach_3.png',
@@ -144,6 +240,18 @@ const AVAILABLE_ICONS = [
   'Peach_P.png',
   'Peach_Q.png',
   'Peach_T.png',
+  'Royal_1.png',
+  'Royal_2.png',
+  'Royal_3.png',
+  'Royal_4.png',
+  'Royal_A.png',
+  'Royal_B.png',
+  'Royal_C.png',
+  'Royal_D.png',
+  'Royal_M.png',
+  'Royal_P.png',
+  'Royal_Q.png',
+  'Royal_T.png',
   'Sage_1.png',
   'Sage_2.png',
   'Sage_3.png',
@@ -192,6 +300,18 @@ const AVAILABLE_ICONS = [
   'SoftTurquise_P.png',
   'SoftTurquise_Q.png',
   'SoftTurquise_T.png',
+  'Violet_1.png',
+  'Violet_2.png',
+  'Violet_3.png',
+  'Violet_4.png',
+  'Violet_A.png',
+  'Violet_B.png',
+  'Violet_C.png',
+  'Violet_D.png',
+  'Violet_M.png',
+  'Violet_P.png',
+  'Violet_Q.png',
+  'Violet_T.png',
 ];
 
 const getAvailableIcons = () =>
@@ -219,6 +339,51 @@ const getIconUrlByName = (iconName) => {
   }
 
   return chrome.runtime.getURL(`icons/${filename}`);
+};
+
+const COLOR_ICON_PATTERN = /^([A-Za-z][A-Za-z0-9]*)_([A-Za-z0-9]+)\.png$/;
+
+const formatIconDisplayName = (filename = '') =>
+  filename.replace(/\.[^/.]+$/, '').replace(/_/g, ' ').trim() || filename;
+
+const splitIconsByColor = (icons) => {
+  const colorGroups = new Map();
+  const otherIcons = [];
+
+  icons.forEach((icon) => {
+    const match = COLOR_ICON_PATTERN.exec(icon.name ?? '');
+    if (match) {
+      const [, color, symbol] = match;
+      if (!colorGroups.has(color)) {
+        colorGroups.set(color, []);
+      }
+      colorGroups.get(color).push({
+        ...icon,
+        color,
+        symbol,
+        displayName: `${color} ${symbol}`,
+      });
+      return;
+    }
+
+    otherIcons.push({
+      ...icon,
+      displayName: formatIconDisplayName(icon.name ?? ''),
+    });
+  });
+
+  const sortedColorGroups = Array.from(colorGroups.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([color, colorIcons]) => ({
+      color,
+      icons: colorIcons.sort((a, b) => a.name.localeCompare(b.name)),
+    }));
+
+  const sortedOtherIcons = otherIcons.sort((a, b) =>
+    (a.displayName ?? '').localeCompare(b.displayName ?? ''),
+  );
+
+  return { colorGroups: sortedColorGroups, otherIcons: sortedOtherIcons };
 };
 
 const parseRules = (rulesText) =>
@@ -356,6 +521,7 @@ const scheduleRuleChecksFromStorage = async () => {
 
 const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
   const icons = await getAvailableIcons();
+  const { colorGroups, otherIcons } = splitIconsByColor(icons);
   const [result] = await chrome.scripting.executeScript({
     target: { tabId },
     func: (dialogData) => {
@@ -423,70 +589,277 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
 
         const iconLabel = document.createElement('div');
         iconLabel.textContent = 'Tab icon';
-        iconLabel.style.cssText = 'font-size: 13px; margin-bottom: 8px;';
+        iconLabel.style.cssText = 'font-size: 13px; margin-bottom: 4px;';
 
-        const iconGrid = document.createElement('div');
-        iconGrid.style.cssText = [
-          'display: flex',
-          'flex-wrap: wrap',
-          'gap: 8px',
-          'margin-bottom: 16px',
-        ].join(';');
+        const colorGroups = dialogData.colorGroups ?? [];
+        const otherIcons = dialogData.otherIcons ?? [];
 
         let selectedIconUrl = dialogData.currentIconUrl ?? '';
-        const iconButtons = [];
+        const colorNameByUrl = new Map();
+        colorGroups.forEach((group) => {
+          group.icons.forEach((icon) => {
+            if (icon?.url) {
+              colorNameByUrl.set(icon.url, group.color);
+            }
+          });
+        });
 
-        const updateSelection = (iconUrl) => {
-          selectedIconUrl = iconUrl;
-          iconButtons.forEach((button) => {
-            button.style.borderColor =
-              button.dataset.iconUrl === selectedIconUrl ? '#2563eb' : '#d0d7de';
+        const colorButtons = new Map();
+        const iconButtons = new Map();
+        let renderedColorIconUrls = new Set();
+
+        const refreshIconSelectionStyles = () => {
+          iconButtons.forEach((button, url) => {
+            const isSelected = url === selectedIconUrl;
+            button.style.borderColor = isSelected ? '#2563eb' : '#d0d7de';
+            button.style.background = isSelected ? '#e0edff' : '#f9fafb';
           });
         };
 
-        const makeIconButton = (icon, labelText) => {
+        const setSelectedIcon = (iconUrl) => {
+          selectedIconUrl = iconUrl;
+          refreshIconSelectionStyles();
+        };
+
+        const makeIconTile = (icon) => {
           const button = document.createElement('button');
           button.type = 'button';
-          button.dataset.iconUrl = icon.url;
-          button.title = icon.name ?? labelText ?? '';
+          button.dataset.iconUrl = icon.url ?? '';
           button.style.cssText = [
-            'width: 48px',
-            'height: 48px',
+            'display: flex',
+            'flex-direction: column',
+            'align-items: center',
+            'justify-content: center',
+            'gap: 6px',
+            'width: 80px',
+            'min-height: 96px',
+            'padding: 10px 6px',
             'border-radius: 10px',
             'border: 2px solid #d0d7de',
             'background: #f9fafb',
+            'cursor: pointer',
+          ].join(';');
+
+          const swatch = document.createElement('div');
+          swatch.style.cssText = [
+            'width: 48px',
+            'height: 48px',
+            'border-radius: 10px',
             'display: flex',
             'align-items: center',
             'justify-content: center',
-            'cursor: pointer',
-            'padding: 0',
+            'background: #ffffff',
+            'overflow: hidden',
           ].join(';');
 
           if (icon.url) {
             const img = document.createElement('img');
             img.src = icon.url;
-            img.alt = icon.name;
-            img.style.cssText = 'width: 24px; height: 24px;';
-            button.appendChild(img);
+            img.alt = icon.displayName ?? icon.name ?? '';
+            img.style.cssText = 'width: 32px; height: 32px;';
+            swatch.appendChild(img);
           } else {
             const span = document.createElement('span');
-            span.textContent = labelText;
-            span.style.cssText = 'font-size: 11px; color: #4b5563;';
-            button.appendChild(span);
+            span.textContent = icon.displayName ?? icon.name ?? '';
+            span.style.cssText = 'font-size: 12px; color: #4b5563;';
+            swatch.appendChild(span);
           }
 
-          button.addEventListener('click', () => updateSelection(icon.url));
-          iconButtons.push(button);
+          const label = document.createElement('span');
+          label.textContent = icon.displayName ?? icon.name ?? '';
+          label.style.cssText =
+            'font-size: 11px; color: #111111; text-align: center;';
+          label.setAttribute('aria-hidden', 'true');
+
+          button.addEventListener('click', () => {
+            setSelectedIcon(icon.url ?? '');
+          });
+
+          button.appendChild(swatch);
+          button.appendChild(label);
+
           return button;
         };
 
-        iconGrid.appendChild(
-          makeIconButton({ name: 'None', url: '' }, 'None'),
-        );
+        const colorSection = document.createElement('div');
+        colorSection.style.cssText =
+          'display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;';
 
-        dialogData.icons.forEach((icon) => {
-          iconGrid.appendChild(makeIconButton(icon));
+        const colorSectionTitle = document.createElement('div');
+        colorSectionTitle.textContent = 'Color icons';
+        colorSectionTitle.style.cssText = 'font-weight: 600; font-size: 13px;';
+        colorSection.appendChild(colorSectionTitle);
+
+        const colorStepOne = document.createElement('div');
+        colorStepOne.textContent = '1. Choose a color';
+        colorStepOne.style.cssText = 'font-size: 12px; color: #4b5563;';
+        colorSection.appendChild(colorStepOne);
+
+        const colorButtonRow = document.createElement('div');
+        colorButtonRow.style.cssText = [
+          'display: flex',
+          'flex-wrap: wrap',
+          'gap: 8px',
+        ].join(';');
+        colorSection.appendChild(colorButtonRow);
+
+        const colorStepTwo = document.createElement('div');
+        colorStepTwo.textContent = '2. Choose an icon';
+        colorStepTwo.style.cssText = 'font-size: 12px; color: #4b5563;';
+        colorSection.appendChild(colorStepTwo);
+
+        const colorIconGrid = document.createElement('div');
+        colorIconGrid.style.cssText = [
+          'display: flex',
+          'flex-wrap: wrap',
+          'gap: 8px',
+        ].join(';');
+        colorSection.appendChild(colorIconGrid);
+
+        let selectedColorName =
+          colorNameByUrl.get(selectedIconUrl) ?? colorGroups[0]?.color ?? null;
+
+        const setSelectedColor = (colorName) => {
+          selectedColorName = colorName;
+          colorButtons.forEach((button, name) => {
+            const isActive = name === selectedColorName;
+            button.style.borderColor = isActive ? '#2563eb' : '#d0d7de';
+            button.style.background = isActive ? '#e0edff' : '#f9fafb';
+          });
+
+          renderedColorIconUrls.forEach((url) => {
+            iconButtons.delete(url);
+          });
+          renderedColorIconUrls = new Set();
+          colorIconGrid.innerHTML = '';
+
+          if (!colorName) {
+            const empty = document.createElement('div');
+            empty.textContent = 'No color icons available.';
+            empty.style.cssText = 'font-size: 12px; color: #6b7280;';
+            colorIconGrid.appendChild(empty);
+            return;
+          }
+
+          const activeGroup = colorGroups.find(
+            (group) => group.color === colorName,
+          );
+
+          if (!activeGroup) {
+            const prompt = document.createElement('div');
+            prompt.textContent = 'Select a color to load icons.';
+            prompt.style.cssText = 'font-size: 12px; color: #6b7280;';
+            colorIconGrid.appendChild(prompt);
+            return;
+          }
+
+          activeGroup.icons.forEach((icon) => {
+            const button = makeIconTile(icon);
+            colorIconGrid.appendChild(button);
+            if (icon.url) {
+              iconButtons.set(icon.url, button);
+              renderedColorIconUrls.add(icon.url);
+            }
+          });
+
+          refreshIconSelectionStyles();
+        };
+
+        const buildColorButton = (group) => {
+          const previewIcon = group.icons[0];
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.dataset.color = group.color;
+          button.style.cssText = [
+            'display: flex',
+            'flex-direction: column',
+            'align-items: center',
+            'justify-content: center',
+            'gap: 6px',
+            'width: 80px',
+            'min-height: 96px',
+            'padding: 10px 6px',
+            'border-radius: 10px',
+            'border: 2px solid #d0d7de',
+            'background: #f9fafb',
+            'cursor: pointer',
+          ].join(';');
+
+          const preview = document.createElement('div');
+          preview.style.cssText = [
+            'width: 48px',
+            'height: 48px',
+            'border-radius: 10px',
+            'display: flex',
+            'align-items: center',
+            'justify-content: center',
+            'background: #ffffff',
+            'overflow: hidden',
+          ].join(';');
+
+          if (previewIcon?.url) {
+            const img = document.createElement('img');
+            img.src = previewIcon.url;
+            img.alt = `${group.color} preview`;
+            img.style.cssText = 'width: 32px; height: 32px;';
+            preview.appendChild(img);
+          }
+
+          const label = document.createElement('span');
+          label.textContent = group.color;
+          label.style.cssText =
+            'font-size: 11px; color: #111111; text-align: center;';
+          label.setAttribute('aria-hidden', 'true');
+
+          button.appendChild(preview);
+          button.appendChild(label);
+
+          button.addEventListener('click', () => {
+            setSelectedColor(group.color);
+          });
+
+          colorButtons.set(group.color, button);
+          colorButtonRow.appendChild(button);
+        };
+
+        colorGroups.forEach((group) => buildColorButton(group));
+
+        if (colorGroups.length > 0) {
+          setSelectedColor(selectedColorName);
+        } else {
+          setSelectedColor(null);
+        }
+
+        const otherSection = document.createElement('div');
+        otherSection.style.cssText =
+          'display: flex; flex-direction: column; gap: 8px;';
+
+        const otherLabel = document.createElement('div');
+        otherLabel.textContent = 'Other icons';
+        otherLabel.style.cssText = 'font-weight: 600; font-size: 13px;';
+        otherSection.appendChild(otherLabel);
+
+        const otherIconGrid = document.createElement('div');
+        otherIconGrid.style.cssText = [
+          'display: flex',
+          'flex-wrap: wrap',
+          'gap: 8px',
+          'margin-bottom: 16px',
+        ].join(';');
+        otherSection.appendChild(otherIconGrid);
+
+        const otherIconsWithNone = [
+          { name: 'None', url: '', displayName: 'None' },
+          ...otherIcons,
+        ];
+
+        otherIconsWithNone.forEach((icon) => {
+          const button = makeIconTile(icon);
+          otherIconGrid.appendChild(button);
+          iconButtons.set(icon.url ?? '', button);
         });
+
+        refreshIconSelectionStyles();
 
         const actions = document.createElement('div');
         actions.style.cssText = [
@@ -626,7 +999,8 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
         dialog.appendChild(label);
         dialog.appendChild(input);
         dialog.appendChild(iconLabel);
-        dialog.appendChild(iconGrid);
+        dialog.appendChild(colorSection);
+        dialog.appendChild(otherSection);
         dialog.appendChild(actions);
         overlay.appendChild(dialog);
         document.body.appendChild(overlay);
@@ -641,7 +1015,8 @@ const openTabConfigDialog = async (tabId, currentName, currentIconUrl) => {
       {
         currentName,
         currentIconUrl,
-        icons,
+        colorGroups,
+        otherIcons,
       },
     ],
   });
